@@ -1,0 +1,42 @@
+{% extends 'visual/base.html' %}
+{% block conteudo %}
+
+
+<div class="offset-1 col-10 list-div">
+    <!-- Exibir todos os clientes ja cadastrados -->
+    <div class="container">
+        <h1>Clientes Cadastrados</h1>
+        <p>Selecione um cliente para abrir sua conta:</p>
+        <table class="table table-bordered table-hover">
+            <tr>
+                <th>ID</th>
+                <th>Nome do cliente</th>
+                <th>Contato</th>
+                <th>Tempo de estadia</th>
+                <th>Data de entrada</th>
+            </tr>
+            {% for clientes in dados_cliente %}
+            <tr>
+                <td>{{ clientes.id_cliente }}</td>
+                <td>{{ clientes.nome_cliente }}</td>
+                <td>{{ clientes.contato }}</td>
+                <td>{{ clientes.tempo_estadia }}</td>
+                <td>{{ clientes.created_cad }}</td>
+                <td>
+                    <a href="/caixa/{{clientes.id_cliente}}"><button type="button" class="btn btn-primary">
+                            Conta do Cliente
+                        </button></a>
+                </td>
+
+            </tr>
+    </div>
+    {% endfor %}
+    </table>
+
+</div>
+
+
+
+
+</div>
+{% endblock %}

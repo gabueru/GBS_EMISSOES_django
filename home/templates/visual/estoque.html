@@ -1,0 +1,85 @@
+{% extends 'visual/base.html' %}
+
+{% block conteudo %}
+
+<!-- Button add product -->
+<a id="add-link" href="/estoque/add">
+    <button type="button" class="btn btn-primary">
+        Cadastrar novo produto
+    </button>
+</a>
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="alert alert-{{ message.tags }}" {% endif %}>{{ message }}</li>
+        {% endfor %}
+</ul>
+{% endif %}
+
+
+<!-- Exibir todos os produtos ja cadastrados -->
+<div class="container">
+    <h1>Produtos Cadastrados</h1>
+    <table class="table table-bordered table-hover">
+        <tr>
+            <th>id</th>
+            <th>tipo</th>
+            <th>nome</th>
+            <th>preço unitario</th>
+            <th>unidade de medida</th>
+            <th>quantidade</th>
+        </tr>
+        {% for produtos in estoque %}
+        <tr>
+            <td>{{produtos.id}}</td>
+            <td>{{produtos.tipo}}</td>
+            <td>{{produtos.nome}}</td>
+            <td>{{produtos.preco}}</td>
+            <td>{{produtos.medida}}</td>
+            <td>{{produtos.quantidade}}</td>
+            <td>
+                <a href="edit/{{produtos.id}}"><button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#staticBackdrop{{produtos.id}}">
+                        Editar
+                    </button></a>
+            </td>
+            <td>
+
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Deletar
+                </button>
+
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                TEM CERTEZA QUE DESEJA EXCLUIR ESTE ITEM?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <form method="post" action="{% url 'delete_produto' produtos.id %}">
+                                    {% csrf_token %}
+                                    <button onclick="confirmacao()" type="submit"
+                                        class="btn btn-danger">Deletar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </td>
+        </tr>
+</div>
+{% endfor %}
+</table>
+
+</div>
+
+{% endblock %}

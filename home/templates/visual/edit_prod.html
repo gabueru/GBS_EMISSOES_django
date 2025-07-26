@@ -1,0 +1,57 @@
+{% extends 'visual/base.html' %}
+{% block conteudo %}
+
+<div class="offset-1 col-10 list-div">
+    <h1>Editando - {{prod_edit.nome}}</h1>
+    <form method="POST" id="Prod_Form">
+        {% csrf_token %}
+        <div class="input-group mb-3">
+            <label class="input-group-text" for="Prod_Form">Tipo de Produto</label>
+            <select class="form-select" name="tipo" id="select_tipo" form="Prod_Form" aria-selected="true">
+                <option value="">Escolha...</option>
+                <option value="1">Mercadoria</option>
+                <option value="2">Serviço</option>
+                <option value="3">Comida</option>
+            </select>
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Nome</span>
+            <input type="text" class="form-control" aria-label="Sizing example input"
+                aria-describedby="inputGroup-sizing-default" name="nome" id="nomeProduto" value="{{prod_edit.nome}}">
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Preço</span>
+            <span class="input-group-text">R$</span>
+            <input type="number" name="preco" id="precoProduto" step="0.01" min="0.01" class="form-control"
+                aria-label="Real amount (with dot and two decimal places)" value="{{prod_edit.preco}}">
+        </div>
+
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Unidade de Medida</span>
+            <input type="text" class="form-control" aria-label="Sizing example input"
+                aria-describedby="inputGroup-sizing-default" name="medida" id="undProduto" placeholder="UND, CX, KG..."
+                value="{{prod_edit.medida}}">
+        </div>
+
+
+        <div class="input-group mb-3">
+            <span class="input-group-text">Quantidade</span>
+            <input type="number" name="quantidade" id="quantidadeProduto" step="1" min="0" class="form-control"
+                aria-label="Quantidade de mercadorias" value="{{prod_edit.quantidade}}">
+        </div>
+        <input type="submit" class="btn btn-success" value="salvar alterações">
+    </form>
+
+</div>
+
+<script>
+
+    var select_tipo = document.getElementById("select_tipo");
+    select_tipo.selectedIndex = "{{prod_edit.tipo}}";
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'visual/base.html' %}
+{% block conteudo %}
+
+{% for clientes in cliente %}
+<h2 class="mb-4">Produtos consumidos pelo cliente - {{ clientes.nome_cliente }}</h2>
+{% endfor %}
+
+<h1>caixa</h1>
+
+{% endblock %}

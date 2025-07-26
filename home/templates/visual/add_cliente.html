@@ -1,0 +1,32 @@
+{% extends 'visual/base.html' %}
+{% block conteudo %}
+
+<div class="offset-1 col-10 list-div">
+    <h1>Cadastrando produto</h1>
+    <form method="post" id="clienteForm">
+        {% csrf_token %}
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Nome do cliente</span>
+            <input type="text" class="form-control" aria-label="Sizing example input"
+                aria-describedby="inputGroup-sizing-default" id="nomeCliente" name="nome_cliente">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">Contato</span>
+            <input type="text" class="form-control" aria-label="Sizing example input"
+                aria-describedby="inputGroup-sizing-default" id="nomeCliente" name="contato">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">tempo de estadia</span>
+            <input type="number" class="form-control" aria-label="Sizing example input"
+                aria-describedby="inputGroup-sizing-default" id="tempoEstadia" name="tempo_estadia">
+        </div>
+        <div class="modal-footer">
+
+            <a href="/clientes"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    id="fecharModal">Voltar</button></a>
+            <button type="submit" class="btn btn-primary">Cadastrar</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

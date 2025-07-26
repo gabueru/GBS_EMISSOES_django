@@ -1,0 +1,43 @@
+from django.db import models
+
+# CRIAÇÃO DE TABELAS
+class produtos(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name='ID do Produto')
+    tipo = models.IntegerField(verbose_name='Tipo do Produto')
+    nome = models.CharField(max_length=100, verbose_name='Nome do Produto')
+    preco = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço')
+    medida = models.CharField(max_length=5, verbose_name='Unidade de Medida')
+    quantidade = models.IntegerField(verbose_name='Quantidade em Estoque')
+    created_prod = models.DateTimeField(auto_now_add=True, null=True)
+    update_prod = models.DateTimeField(auto_now=True)
+
+class clientes(models.Model):
+    id_cliente = models.AutoField(primary_key=True, verbose_name='ID do cliente')
+    nome_cliente = models.CharField(max_length=100, verbose_name='Nome do cliente')
+    contato = models.CharField(max_length=11, blank=True, null=True, verbose_name='telefone celular')
+    tempo_estadia = models.IntegerField(verbose_name='Tempo de estadia')
+    created_cad = models.DateTimeField(auto_now_add=True, null=True)
+    update_cad = models.DateTimeField(auto_now=True)
+
+
+class vendas(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name='ID da venda')
+    id_cliente = models.ForeignKey(clientes, on_delete=models.DO_NOTHING)
+    data_hora = models.DateTimeField(auto_now_add=True, null=True)
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='valor total')
+    desconto = models.IntegerField(verbose_name='desconto')
+
+class itens_venda(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name='ID do item vendas')
+    id_vendas = models.ForeignKey(vendas, on_delete=models.DO_NOTHING)
+    prod_id = models.ForeignKey(produtos, on_delete=models.DO_NOTHING)
+    quantidade = models.IntegerField(verbose_name='Quantidade vendido')
+    preco_unit = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço unitario')
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Subtotal')
+
+class pagamentos(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name='ID do pagamento')
+    id_vendas = models.ForeignKey(vendas, on_delete=models.DO_NOTHING)
+    forma_pag = models.IntegerField(verbose_name='Forma de pagamento')
+    valor_pag = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='valor pago')
+    troco = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='valor pago')

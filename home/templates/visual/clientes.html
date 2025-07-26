@@ -1,0 +1,81 @@
+{% extends 'visual/base.html' %}
+
+{% block conteudo %}
+
+
+<!-- Button trigger modal -->
+<a id="add-link" href="/clientes/add">
+    <button type="button" class="btn btn-primary">
+        Cadastrar novo cliente
+    </button>
+</a>
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="alert alert-{{ message.tags }}" {% endif %}>{{ message }}</li>
+        {% endfor %}
+</ul>
+{% endif %}
+
+
+<!-- Exibir todos os clientes ja cadastrados -->
+<div class="container">
+    <h1>Clientes Cadastrados</h1>
+    <table class="table table-bordered table-hover">
+        <tr>
+            <th>ID</th>
+            <th>Nome do cliente</th>
+            <th>Contato</th>
+            <th>Tempo de estadia</th>
+            <th>Data de entrada</th>
+        </tr>
+        {% for clientes in dados_cliente %}
+        <tr>
+            <td>{{ clientes.id_cliente }}</td>
+            <td>{{ clientes.nome_cliente }}</td>
+            <td>{{ clientes.contato }}</td>
+            <td>{{ clientes.tempo_estadia }}</td>
+            <td>{{ clientes.created_cad }}</td>
+            <td>
+                <a href="/clientes/edit/{{clientes.id_cliente}}"><button type="button" class="btn btn-primary">
+                        Editar
+                    </button></a>
+            </td>
+            <td>
+
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Deletar
+                </button>
+
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                TEM CERTEZA QUE DESEJA DELETAR ESTE CLIENTE?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <form method="post" action="{% url 'delete_cliente' clientes.id_cliente %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Deletar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </td>
+        </tr>
+</div>
+{% endfor %}
+</table>
+
+</div>
+{% endblock %}
