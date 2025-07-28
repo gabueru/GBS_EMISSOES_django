@@ -1,10 +1,57 @@
 {% extends 'visual/base.html' %}
 {% block conteudo %}
 
-{% for clientes in cliente %}
 <h2 class="mb-4">Produtos consumidos pelo cliente - {{ clientes.nome_cliente }}</h2>
-{% endfor %}
 
-<h1>caixa</h1>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- coluna 1 -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title">Produtos em estoque</h4>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tipo</th>
+                                <th>Nome</th>
+                                <th>Preço</th>
+                                <th>Medida</th>
+                                <th>Qtd</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produtos in estoque %}
+                            <tr>
+                                <td>{{ produtos.id }}</td>
+                                <td>{{ produtos.tipo }}</td>
+                                <td>{{ produtos.nome }}</td>
+                                <td>{{ produtos.preco }}</td>
+                                <td>{{ produtos.medida }}</td>
+                                <td>{{ produtos.quantidade }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-success">+</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- coluna 2 -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title">Conta do cliente</h4>
+                    <p>adicionar tabela de itens consumidos</p>
+                    <button type="button" class="btn btn-success">fechar conta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

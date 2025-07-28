@@ -136,16 +136,15 @@ def caixa(request):
     
 
 def caixa_cliente(request, id):
-    cliente = get_object_or_404(clientes, id_cliente=id)
     todos_produtos = produtos.objects.all()
     
-    
-    lista = {
+
+    lista_prod = {
         'estoque': todos_produtos
     }
     
 
-    return render(request, 'visual/caixa_cliente.html', {'lista':lista, 'cliente_edit': cliente})
+    return render(request, 'visual/caixa_cliente.html', lista_prod)
 
 @csrf_exempt
 def atualizar_estoque(request):

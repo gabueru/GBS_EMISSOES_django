@@ -5,7 +5,7 @@ class produtos(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID do Produto')
     tipo = models.IntegerField(verbose_name='Tipo do Produto')
     nome = models.CharField(max_length=100, verbose_name='Nome do Produto')
-    preco = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço')
+    preco = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preco')
     medida = models.CharField(max_length=5, verbose_name='Unidade de Medida')
     quantidade = models.IntegerField(verbose_name='Quantidade em Estoque')
     created_prod = models.DateTimeField(auto_now_add=True, null=True)
