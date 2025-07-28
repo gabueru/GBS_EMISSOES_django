@@ -23,6 +23,12 @@ urlpatterns = [
     path('caixa/', views.caixa, name='caixa'),
     # Conta do cliente
     path('caixa/<int:id>', views.caixa_cliente, name='caixa_cliente'),
+    # Adicionar item na cesta
+    path('caixa/<int:cliente_id>/add/<int:produto_id>/', views.adicionar_item, name='adicionar_item'),
+    # Remover item da cexta
+    path('remover-item/<int:item_id>/', views.remover_item, name='remover_item'),
+    # Fechar conta
+    path('fechar-conta/', views.fechar_conta, name='fechar_conta'),
 
 
     # Relatorios page
@@ -39,7 +45,4 @@ urlpatterns = [
     # edit product
     path('estoque/edit/<int:id>/', views.edit_produto, name='edit_produto'),
 
-
-    # atualizar estoque
-    path('atualizar_estoque/', views.atualizar_estoque, name='atualizar_estoque'),
 ]

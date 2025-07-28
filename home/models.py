@@ -19,6 +19,12 @@ class clientes(models.Model):
     created_cad = models.DateTimeField(auto_now_add=True, null=True)
     update_cad = models.DateTimeField(auto_now=True)
 
+class Cesta(models.Model):
+    cliente = models.ForeignKey(clientes, on_delete=models.CASCADE)
+    produto = models.ForeignKey(produtos, on_delete=models.DO_NOTHING)
+    quantidade = models.IntegerField()
+    preco_unit = models.DecimalField(max_digits=10, decimal_places=2)
+
 
 class vendas(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID da venda')

@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
+from django.db.models import F, Sum, DecimalField, ExpressionWrapper
+from django.utils import timezone
+from decimal import Decimal
 
-from .models import produtos, clientes
+from .models import produtos, clientes, Cesta, vendas, itens_venda, pagamentos
 from .forms import Prod_Form, Cliente_Form
 from django import forms
 from django.contrib import messages
@@ -137,41 +137,107 @@ def caixa(request):
 
 def caixa_cliente(request, id):
     todos_produtos = produtos.objects.all()
-    
 
-    lista_prod = {
-        'estoque': todos_produtos
+    cliente = clientes.objects.get(id_cliente=id)
+
+    # Itens da cesta (temporária)
+    itens_cesta = (
+        Cesta.objects
+        .filter(cliente=cliente)
+        .annotate(subtotal=ExpressionWrapper(F('quantidade') * F('preco_unit'), output_field=DecimalField()))
+    )
+
+    total_cesta = itens_cesta.aggregate(total=Sum('subtotal'))['total'] or 0
+
+    contexto = {
+        'estoque': todos_produtos,
+        'cesta': itens_cesta,
+        'total_cesta': total_cesta,
+        'cliente_id': id
     }
-    
 
-    return render(request, 'visual/caixa_cliente.html', lista_prod)
+    return render(request, 'visual/caixa_cliente.html', contexto)
 
-@csrf_exempt
-def atualizar_estoque(request):
-    if request.method == "POST":
+def adicionar_item(request, cliente_id, produto_id):
+    if request.method == 'POST':
+        produto = produtos.objects.get(id=produto_id)
+        cliente = clientes.objects.get(id_cliente=cliente_id)
+        
+
+        # Verifica se já existe item na cesta
+        item, created = Cesta.objects.get_or_create(
+            cliente=cliente,
+            produto=produto,
+            defaults={'quantidade': 1, 'preco_unit': produto.preco}
+        )
+        if not created:
+            item.quantidade += 1
+            item.save()
+
+        return redirect('caixa_cliente', id=cliente_id)
+
+def remover_item(request, item_id):
+    item = Cesta.objects.get(id=item_id)
+    cliente_id = item.cliente.id_cliente
+    item.delete()
+    return redirect('caixa_cliente', id=cliente_id)
+
+def fechar_conta(request):
+    if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            produto_id = data.get("id_produto")
-            quantidade = int(data.get("quantidade"))
+            cliente_id = request.POST.get('cliente_id')
+            forma_pag = int(request.POST.get('forma_pag'))
+            valor_pag = Decimal(request.POST.get('valor_pag').replace(',','.'))
 
-            produto = produtos.objects.get(id=produto_id)
+            cliente = get_object_or_404(clientes, id_cliente=cliente_id)
+            itens = Cesta.objects.filter(cliente=cliente)
 
-            novo_estoque = produto.quantidade - quantidade  # subtrai mesmo com valor negativo
+            if not itens.exists():
+                return redirect('caixa_cliente', id=cliente_id)
 
-            if novo_estoque < 0:
-                return JsonResponse({
-                    "status": "erro",
-                    "mensagem": "Estoque não pode ficar negativo."
-                }, status=400)
+            total = sum([item.quantidade * item.preco_unit for item in itens])
 
-            produto.quantidade = novo_estoque
-            produto.save()
+            troco = valor_pag - total
 
-            return JsonResponse({"status": "ok"})
+            if valor_pag < total:
+                # Aqui você pode adicionar uma mensagem com django.contrib.messages
+                return redirect('caixa_cliente', id=cliente_id)
 
-        except produtos.DoesNotExist:
-            return JsonResponse({"status": "erro", "mensagem": "Produto não encontrado"}, status=404)
+            # Criar registro de venda
+            venda = vendas.objects.create(
+                id_cliente=cliente,
+                valor_total=total,
+                desconto=0,  # ou use algum campo/formulário
+                data_hora=timezone.now()
+            )
+
+            # Criar itens da venda
+            for item in itens:
+                itens_venda.objects.create(
+                    id_vendas=venda,
+                    prod_id=item.produto,
+                    quantidade=item.quantidade,
+                    preco_unit=item.preco_unit,
+                    subtotal=item.quantidade * item.preco_unit
+                )
+
+                # Atualizar o estoque
+                produto = item.produto
+                produto.quantidade -= item.quantidade
+                produto.save()
+
+            pagamentos.objects.create(
+                id_vendas=venda,
+                forma_pag=forma_pag,
+                valor_pag=valor_pag,
+                troco=troco
+            )
+
+
+            # Limpar a cesta
+            itens.delete()
+
+            return redirect('caixa_cliente', id=cliente_id)
         except Exception as e:
-            return JsonResponse({"status": "erro", "mensagem": str(e)}, status=500)
-
-    return JsonResponse({"status": "erro", "mensagem": "Método não permitido"}, status=405)
+            print("Erro ao fechar conta:", e)
+            return redirect('caixa_cliente', id=cliente_id)
