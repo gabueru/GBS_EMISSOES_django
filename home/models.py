@@ -24,7 +24,10 @@ class Cesta(models.Model):
     produto = models.ForeignKey(produtos, on_delete=models.DO_NOTHING)
     quantidade = models.IntegerField()
     preco_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
+    def __str__(self):
+        return f"{self.quantidade}x {self.produto.nome} - Cliente: {self.cliente.nome_cliente}"
 
 class vendas(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID da venda')

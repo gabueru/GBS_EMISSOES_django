@@ -25,7 +25,7 @@
             <span class="input-group-text">Preço</span>
             <span class="input-group-text">R$</span>
             <input type="number" name="preco" id="precoProduto" step="0.01" min="0.01" class="form-control"
-                aria-label="Real amount (with dot and two decimal places)" value="{{prod_edit.preco}}">
+                aria-label="Real amount (with dot and two decimal places)" value="{{ produto.preco|default_if_none:'' }}">
         </div>
 
 

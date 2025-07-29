@@ -63,6 +63,10 @@ def edit_produto(request, id):
     prod_edit = get_object_or_404(produtos, id=id)
     form = Prod_Form(instance=prod_edit)
 
+    contexto = {
+        'form':form,
+        'prod_edit': prod_edit,
+    }
     if(request.method == 'POST'):
         form = Prod_Form(request.POST, instance=prod_edit)
 
@@ -70,9 +74,9 @@ def edit_produto(request, id):
             prod_edit.save()
             return redirect('/estoque')
         else:
-            return render(request, 'visual/edit_prod.html', {'form':form, 'prod_edit': prod_edit})
+            return render(request, 'visual/edit_prod.html', contexto)
     else:
-        return render(request, 'visual/edit_prod.html', {'form':form, 'prod_edit': prod_edit})
+        return render(request, 'visual/edit_prod.html', contexto)
 
 
 # FUNÇÕES DA PAGINA CLIENTES
@@ -136,51 +140,83 @@ def caixa(request):
     
 
 def caixa_cliente(request, id):
-    todos_produtos = produtos.objects.all()
+    estoque = produtos.objects.all()
 
-    cliente = clientes.objects.get(id_cliente=id)
+    cliente = get_object_or_404(clientes,id_cliente=id)
 
     # Itens da cesta (temporária)
-    itens_cesta = (
-        Cesta.objects
-        .filter(cliente=cliente)
-        .annotate(subtotal=ExpressionWrapper(F('quantidade') * F('preco_unit'), output_field=DecimalField()))
-    )
+    cesta = Cesta.objects.filter(cliente=cliente)
 
-    total_cesta = itens_cesta.aggregate(total=Sum('subtotal'))['total'] or 0
+    total_cesta = cesta.aggregate(total=Sum('subtotal'))['total'] or 0
 
     contexto = {
-        'estoque': todos_produtos,
-        'cesta': itens_cesta,
+        'estoque': estoque,
+        'cesta': cesta,
         'total_cesta': total_cesta,
-        'cliente_id': id
+        'cliente_id': id,
+        'cliente': cliente
     }
 
     return render(request, 'visual/caixa_cliente.html', contexto)
 
 def adicionar_item(request, cliente_id, produto_id):
     if request.method == 'POST':
-        produto = produtos.objects.get(id=produto_id)
-        cliente = clientes.objects.get(id_cliente=cliente_id)
+        cliente = get_object_or_404(clientes, id_cliente=cliente_id)
+        produto = get_object_or_404(produtos, id=produto_id)
         
+        try:
+            quant = int(request.POST.get('quantidade', 1))
+            if quant <= 0:
+                return redirect('caixa_cliente', id=cliente_id)
+            
+            preco_unit = produto.preco
+            subtotal = quant * preco_unit
+            
+            # Verifica se o item já está na cesta
+            item, criado = Cesta.objects.get_or_create(
+                cliente=cliente,
+                produto=produto,
+                defaults={
+                    'quantidade': quant,
+                    'preco_unit': produto.preco,
+                    'subtotal': subtotal
+                }
+            )
 
-        # Verifica se já existe item na cesta
-        item, created = Cesta.objects.get_or_create(
-            cliente=cliente,
-            produto=produto,
-            defaults={'quantidade': 1, 'preco_unit': produto.preco}
-        )
-        if not created:
-            item.quantidade += 1
-            item.save()
+            if not criado:
+                # Atualiza quantidade e subtotal
+                item.quantidade += quant
+                item.subtotal = item.quantidade * item.preco_unit
+                item.save()
 
-        return redirect('caixa_cliente', id=cliente_id)
+        except Exception as e:
+            print("Erro ao adicionar item:", e)
+
+    return redirect('caixa_cliente', id=cliente_id)
 
 def remover_item(request, item_id):
-    item = Cesta.objects.get(id=item_id)
-    cliente_id = item.cliente.id_cliente
-    item.delete()
-    return redirect('caixa_cliente', id=cliente_id)
+    if request.method == 'POST':
+        try:
+            item = get_object_or_404(Cesta, id=item_id)
+            cliente_id = item.cliente.id_cliente
+
+            quant = int(request.POST.get('quantidade', 1))
+            if quant <= 0:
+                return redirect('caixa_cliente', id=cliente_id)
+
+            # Remove parcialmente ou completamente
+            if quant >= item.quantidade:
+                item.delete()
+            else:
+                item.quantidade -= quant
+                item.subtotal = item.quantidade * item.preco_unit
+                item.save()
+
+        except Exception as e:
+            print("Erro ao remover item:", e)
+            return redirect('caixa_cliente', id=item.cliente.id_cliente)
+
+        return redirect('caixa_cliente', id=cliente_id)
 
 def fechar_conta(request):
     if request.method == 'POST':

@@ -1,7 +1,8 @@
 {% extends 'visual/base.html' %}
 {% block conteudo %}
 
-<h2 class="mb-4">Produtos consumidos pelo cliente - {{ clientes.nome_cliente }}</h2>
+
+<h2 class="mb-4">Produtos consumidos pelo cliente - {{ cliente.nome_cliente }}</h2>
 
 
 <div class="container mt-4">
@@ -32,8 +33,11 @@
                                 <td>{{ produtos.medida }}</td>
                                 <td>{{ produtos.quantidade }}</td>
                                 <td>
-                                    <form method="POST" action="{% url 'adicionar_item' cliente_id produtos.id %}">
+                                    <form method="POST" action="{% url 'adicionar_item' cliente_id produtos.id %}"
+                                        class="d-flex align-items-center">
                                         {% csrf_token %}
+                                        <input type="number" name="quantidade" value="1" min="1"
+                                            class="form-control form-control-sm me-2" style="width: 60px;" required>
                                         <button type="submit" class="btn btn-success btn-sm">+</button>
                                     </form>
                                 </td>
@@ -67,8 +71,11 @@
                                 <td>R$ {{ item.preco_unit }}</td>
                                 <td>R$ {{ item.subtotal }}</td>
                                 <td>
-                                    <form method="POST" action="{% url 'remover_item' item.id %}">
+                                    <form method="POST" action="{% url 'remover_item' item.id %}"
+                                        class="d-flex align-items-center">
                                         {% csrf_token %}
+                                        <input type="number" name="quantidade" value="1" min="1"
+                                            class="form-control form-control-sm me-2" style="width: 60px;" required>
                                         <button type="submit" class="btn btn-danger btn-sm">Remover</button>
                                     </form>
                                 </td>
