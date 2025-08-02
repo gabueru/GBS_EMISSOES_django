@@ -1,4 +1,23 @@
 {% extends 'visual/base.html' %}
 {% block conteudo %}
-<H1>TELA DE RELATORIOS</H1>
+<H1>Vendas realizadas</H1>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">cliente</th>
+      <th scope="col">Hora da venda</th>
+      <th scope="col">Valor da venda</th>
+    </tr>
+  </thead>
+  <tbody>
+    {%for venda in vendas%}
+    <tr>
+      <th scope="row">1</th>
+      <td>{{venda.id_cliente}}</td>
+      <td>{{vendas.data_hora}}</td>
+      <td>{{vendas.valor_total}}</td>
+    </tr>
+    {%endfor%}
+</table>
 {% endblock %}

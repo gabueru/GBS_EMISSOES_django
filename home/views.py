@@ -21,8 +21,13 @@ def home(request):
 
 
 def relatorios(request):
+    todas_vendas = vendas.objects.all()
+
+    contexto = {
+        'vendas': todas_vendas
+    }
     
-    return render(request, 'visual/relatorios.html')
+    return render(request, 'visual/relatorios.html', contexto)
 
 
 # FUNÇÕES DA PAGINA ESTOQUE
