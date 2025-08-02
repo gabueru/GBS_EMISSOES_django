@@ -9,6 +9,12 @@ from .forms import Prod_Form, Cliente_Form
 from django import forms
 from django.contrib import messages
 
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+import weasyprint
+
+from django.utils.dateparse import parse_date
+
 # NOTA DE ATUALIZAÇÃO FUTURA: ADICIONAR PAGINAÇÃO NA LISTA DE PRODUTOS E CLIENTES. LINK VIDEO: https://www.youtube.com/watch?v=RVTUugdKY9o&list=PLnDvRpP8BnewqnMzRnBT5LeTpld5bMvsj&index=13&ab_channel=MatheusBattisti-HoradeCodar
 
 def home(request):
@@ -18,17 +24,44 @@ def home(request):
 
 
 
-
+# FUNÇÕES DA PAGINA RELATORIOS
 
 def relatorios(request):
-    todas_vendas = vendas.objects.all()
+    vendas_filtradas = vendas.objects.select_related('id_cliente').all()
 
-    contexto = {
-        'vendas': todas_vendas
-    }
-    
-    return render(request, 'visual/relatorios.html', contexto)
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    cliente_nome = request.GET.get('cliente')
 
+    if data_inicio:
+        vendas_filtradas = vendas_filtradas.filter(data_hora__date__gte=parse_date(data_inicio))
+    if data_fim:
+        vendas_filtradas = vendas_filtradas.filter(data_hora__date__lte=parse_date(data_fim))
+    if cliente_nome:
+        vendas_filtradas = vendas_filtradas.filter(id_cliente__nome_cliente__icontains=cliente_nome)
+
+    vendas_filtradas = vendas_filtradas.order_by('-data_hora')
+
+    return render(request, 'visual/relatorios.html', {
+        'vendas': vendas_filtradas
+    })
+
+def gerar_recibo(request, venda_id):
+    venda = get_object_or_404(vendas, id=venda_id)
+    itens = itens_venda.objects.filter(id_vendas=venda)
+    pagamento = pagamentos.objects.filter(id_vendas=venda).first()
+
+    html_string = render_to_string('visual/recibo_pdf.html', {
+        'venda': venda,
+        'itens': itens,
+        'pagamento': pagamento
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=recibo_venda_{venda_id}.pdf'
+    weasyprint.HTML(string=html_string).write_pdf(response)
+
+    return response
 
 # FUNÇÕES DA PAGINA ESTOQUE
 
