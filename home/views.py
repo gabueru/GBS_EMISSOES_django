@@ -229,6 +229,8 @@ def fechar_conta(request):
             cliente_id = request.POST.get('cliente_id')
             forma_pag = int(request.POST.get('forma_pag'))
             valor_pag = Decimal(request.POST.get('valor_pag').replace(',','.'))
+            desconto = Decimal(request.POST.get('desconto', '0'))
+            desconto_decimal = (Decimal('100') - desconto) / Decimal('100')
 
             cliente = get_object_or_404(clientes, id_cliente=cliente_id)
             itens = Cesta.objects.filter(cliente=cliente)
@@ -236,19 +238,20 @@ def fechar_conta(request):
             if not itens.exists():
                 return redirect('caixa_cliente', id=cliente_id)
 
-            total = sum([item.quantidade * item.preco_unit for item in itens])
+            total_bruto = sum(item.quantidade * item.preco_unit for item in itens)
+            total_com_desconto = total_bruto * desconto_decimal
 
-            troco = valor_pag - total
-
-            if valor_pag < total:
-                # Aqui você pode adicionar uma mensagem com django.contrib.messages
+            if valor_pag < total_com_desconto:
+                messages.warning(request, 'Valor pago insuficiente.')
                 return redirect('caixa_cliente', id=cliente_id)
+
+            troco = valor_pag - total_com_desconto
 
             # Criar registro de venda
             venda = vendas.objects.create(
                 id_cliente=cliente,
-                valor_total=total,
-                desconto=0,  # ou use algum campo/formulário
+                valor_total=total_com_desconto,
+                desconto=desconto,  # ou use algum campo/formulário
                 data_hora=timezone.now()
             )
 
@@ -277,8 +280,10 @@ def fechar_conta(request):
 
             # Limpar a cesta
             itens.delete()
-
+            messages.success(request, 'Conta fechada com sucesso!')
             return redirect('caixa_cliente', id=cliente_id)
+        
         except Exception as e:
             print("Erro ao fechar conta:", e)
+            messages.error(request, 'Erro ao finalizar conta.')
             return redirect('caixa_cliente', id=cliente_id)
