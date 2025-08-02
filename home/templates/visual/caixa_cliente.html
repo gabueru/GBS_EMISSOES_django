@@ -4,6 +4,16 @@
 
 <h2 class="mb-4">Produtos consumidos pelo cliente - {{ cliente.nome_cliente }}</h2>
 
+{% if messages %}
+<div class="container mt-2">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="container mt-4">
     <div class="row">
@@ -12,6 +22,10 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4 class="card-title">Produtos em estoque</h4>
+                    <div class="mb-2">
+                        <input type="text" id="filtro-produtos" class="form-control form-control-sm"
+                            placeholder="Pesquisar produto por nome...">
+                    </div>
                     <table class="table table-striped">
                         <thead>
                             <tr>
@@ -115,6 +129,12 @@
                                         <input type="hidden" name="cliente_id" value="{{ cliente_id }}">
 
                                         <div class="mb-3">
+                                            <label for="desconto" class="form-label">Desconto (%)</label>
+                                            <input type="number" step="1" min="0" max="100" class="form-control"
+                                                id="desconto" name="desconto" value="0">
+                                        </div>
+
+                                        <div class="mb-3">
                                             <label for="forma_pag" class="form-label">Forma de Pagamento</label>
                                             <select class="form-select" id="forma_pag" name="forma_pag" required>
                                                 <option value="" disabled selected>Selecione</option>
@@ -127,8 +147,10 @@
                                         <div class="mb-3">
                                             <label for="valor_pag" class="form-label">Valor Pago</label>
                                             <input type="number" step="0.01" min="0" class="form-control" id="valor_pag"
-                                                name="valor_pag" required>
+                                                name="valor_pag" required
+                                                placeholder="valor esperado: R$ {{ total_cesta }}">
                                         </div>
+
                                     </form>
                                 </div>
 
@@ -147,5 +169,44 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('filtro-produtos');
+        const tabela = document.querySelector('table.table.table-striped tbody');
 
+        input.addEventListener('keyup', function () {
+            const filtro = input.value.toLowerCase();
+            const linhas = tabela.getElementsByTagName('tr');
+
+            Array.from(linhas).forEach((linha) => {
+                const nomeProduto = linha.cells[2]?.textContent.toLowerCase() || '';
+                if (nomeProduto.includes(filtro)) {
+                    linha.style.display = '';
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const totalOriginal = parseFloat("{{ total_cesta|floatformat:'2' }}".replace(',', '.')) || 0;
+        const descontoInput = document.getElementById('desconto');
+        const valorPagInput = document.getElementById('valor_pag');
+
+        function atualizarPlaceholder() {
+            let perc = parseFloat(descontoInput.value) || 0;
+            if (perc < 0) perc = 0;
+            if (perc > 100) perc = 100;
+
+            const descontoValor = (totalOriginal * perc) / 100;
+            const totalComDesconto = totalOriginal - descontoValor;
+
+            valorPagInput.placeholder = 'valor esperado: R$ ' + totalComDesconto.toFixed(2);
+        }
+
+        descontoInput.addEventListener('input', atualizarPlaceholder);
+        atualizarPlaceholder();
+    });
+</script>
 {% endblock %}
