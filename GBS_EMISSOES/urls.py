@@ -5,7 +5,12 @@ from home import views
 urlpatterns = [
     # Admin site
     path('admin/', admin.site.urls),
-    
+
+    # login page
+    path('cadastro/', views.cadastro_view, name='cadastro'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
     # Home page
     path('', views.home, name='home'),
 

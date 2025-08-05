@@ -30,9 +30,12 @@
           <a class="nav-link active fs-4" href="{% url 'estoque' %}">ESTOQUE</a>
           <a class="nav-link active fs-4" href="{% url 'clientes' %}">CLIENTES</a>
           <a class="nav-link active fs-4" href="{% url 'relatorios' %}">RELATORIOS</a>
-
+        </div>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link active fs-4 text-danger" href="{% url 'logout' %}">SAIR</a>
         </div>
       </div>
+    </div>
   </nav>
   {% block conteudo %}
 

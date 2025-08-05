@@ -1,33 +1,65 @@
 from django.shortcuts import render, redirect, get_object_or_404
-
 from django.db.models import F, Sum, DecimalField, ExpressionWrapper
 from django.utils import timezone
 from decimal import Decimal
-
 from .models import produtos, clientes, Cesta, vendas, itens_venda, pagamentos
 from .forms import Prod_Form, Cliente_Form
 from django import forms
 from django.contrib import messages
-
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 import weasyprint
-
 from django.utils.dateparse import parse_date
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
-# NOTA DE ATUALIZAÇÃO FUTURA: ADICIONAR PAGINAÇÃO NA LISTA DE PRODUTOS E CLIENTES. LINK VIDEO: https://www.youtube.com/watch?v=RVTUugdKY9o&list=PLnDvRpP8BnewqnMzRnBT5LeTpld5bMvsj&index=13&ab_channel=MatheusBattisti-HoradeCodar
+# =================== AUTENTICAÇÃO ===================
+def cadastro_view(request):
+    if request.method == 'POST':
+        usuario = request.POST.get('usuario')
+        email = request.POST.get('email')
+        senha = request.POST.get('senha')
 
+        if User.objects.filter(username=usuario).exists():
+            messages.error(request, 'Usuário já existe.')
+            return redirect('cadastro')
+
+        user = User.objects.create_user(username=usuario, email=email, password=senha)
+        user.save()
+        messages.success(request, 'Cadastro realizado com sucesso. Faça login!')
+        return redirect('login')
+
+    return render(request, 'visual/cadastro.html')
+
+def login_view(request):
+    if request.method == 'POST':
+        usuario = request.POST.get('usuario')
+        senha = request.POST.get('senha')
+
+        user = authenticate(request, username=usuario, password=senha)
+
+        if user is not None:
+            login(request, user)
+            return redirect('home') 
+        else:
+            messages.error(request, 'Usuário ou senha inválidos.')
+            return redirect('login')
+
+    return render(request, 'visual/login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
 def home(request):
-
     return render(request, 'visual/home.html')
 
-
-
-
-# FUNÇÕES DA PAGINA RELATORIOS
-
+# =================== RELATÓRIOS ===================
+@login_required
 def relatorios(request):
-    vendas_filtradas = vendas.objects.select_related('id_cliente').all()
+    vendas_filtradas = vendas.objects.select_related('id_cliente').filter(usuario=request.user)
 
     data_inicio = request.GET.get('data_inicio')
     data_fim = request.GET.get('data_fim')
@@ -46,8 +78,9 @@ def relatorios(request):
         'vendas': vendas_filtradas
     })
 
+@login_required
 def gerar_recibo(request, venda_id):
-    venda = get_object_or_404(vendas, id=venda_id)
+    venda = get_object_or_404(vendas, id=venda_id, usuario=request.user)
     itens = itens_venda.objects.filter(id_vendas=venda)
     pagamento = pagamentos.objects.filter(id_vendas=venda).first()
 
@@ -60,160 +93,122 @@ def gerar_recibo(request, venda_id):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'filename=recibo_venda_{venda_id}.pdf'
     weasyprint.HTML(string=html_string).write_pdf(response)
-
     return response
 
-# FUNÇÕES DA PAGINA ESTOQUE
-
+# =================== ESTOQUE ===================
+@login_required
 def estoque(request):
-    # Exibir todos os produtos ja cadastrados em uma nova pagina
-    todos_produtos = produtos.objects.all()
-    
-    lista = {
-        'estoque': todos_produtos
-    }
-    # Retorna os dados para a pagina de listagem de produtos
-    return render(request, 'visual/estoque.html', lista)
+    todos_produtos = produtos.objects.filter(usuario=request.user)
+    return render(request, 'visual/estoque.html', {'estoque': todos_produtos})
 
-
-
+@login_required
 def add_produto(request):
     if request.method == 'POST':
         form = Prod_Form(request.POST)
-
         if form.is_valid():
             novo_prod = form.save(commit=False)
-            novo_prod.done = 'doing'
+            novo_prod.usuario = request.user
             novo_prod.save()
             return redirect('/estoque')
-
     else:
         form = Prod_Form()
-        return render(request,'visual/add_prod.html', {'form': form})
-    
+    return render(request, 'visual/add_prod.html', {'form': form})
+
+@login_required
 def delete_produto(request, id):
-    produto = get_object_or_404(produtos, id=id)
+    produto = get_object_or_404(produtos, id=id, usuario=request.user)
     produto.delete()
     messages.success(request, 'Produto deletado com sucesso!')
     return redirect('/estoque')
 
+@login_required
 def edit_produto(request, id):
-    prod_edit = get_object_or_404(produtos, id=id)
+    prod_edit = get_object_or_404(produtos, id=id, usuario=request.user)
     form = Prod_Form(instance=prod_edit)
 
-    contexto = {
-        'form':form,
-        'prod_edit': prod_edit,
-    }
-    if(request.method == 'POST'):
+    if request.method == 'POST':
         form = Prod_Form(request.POST, instance=prod_edit)
-
-        if(form.is_valid()):
+        if form.is_valid():
             prod_edit.save()
             return redirect('/estoque')
-        else:
-            return render(request, 'visual/edit_prod.html', contexto)
-    else:
-        return render(request, 'visual/edit_prod.html', contexto)
+    return render(request, 'visual/edit_prod.html', {'form': form, 'prod_edit': prod_edit})
 
-
-# FUNÇÕES DA PAGINA CLIENTES
-
+# =================== CLIENTES ===================
+@login_required
 def dados_cliente(request):
-    # Exibir todos os clientes ja cadastrados em uma nova pagina
-    todos_clientes = clientes.objects.all()
-    
-    lista = {
-        'dados_cliente': todos_clientes
-    }
-    # Retorna os dados para a pagina de listagem de produtos
-    return render(request, 'visual/clientes.html', lista)    
+    todos_clientes = clientes.objects.filter(usuario=request.user)
+    return render(request, 'visual/clientes.html', {'dados_cliente': todos_clientes})
 
+@login_required
 def add_cliente(request):
     if request.method == 'POST':
         form = Cliente_Form(request.POST)
-
         if form.is_valid():
             novo_cliente = form.save(commit=False)
-            novo_cliente.done = 'doing'
+            novo_cliente.usuario = request.user
             novo_cliente.save()
             return redirect('/clientes')
-
     else:
         form = Cliente_Form()
-        return render(request,'visual/add_cliente.html', {'form': form})
-    
+    return render(request, 'visual/add_cliente.html', {'form': form})
+
+@login_required
 def edit_cliente(request, id):
-    cliente_edit = get_object_or_404(clientes, id_cliente=id)
+    cliente_edit = get_object_or_404(clientes, id_cliente=id, usuario=request.user)
     form = Cliente_Form(instance=cliente_edit)
 
-    if(request.method == 'POST'):
+    if request.method == 'POST':
         form = Cliente_Form(request.POST, instance=cliente_edit)
-
-        if(form.is_valid()):
+        if form.is_valid():
             cliente_edit.save()
             return redirect('/clientes')
-        else:
-            return render(request, 'visual/edit_cliente.html', {'form':form, 'cliente_edit': cliente_edit})
-    else:
-        return render(request, 'visual/edit_cliente.html', {'form':form, 'cliente_edit': cliente_edit})
-    
+    return render(request, 'visual/edit_cliente.html', {'form': form, 'cliente_edit': cliente_edit})
+
+@login_required
 def delete_cliente(request, id):
-    cliente = get_object_or_404(clientes, id_cliente=id)
+    cliente = get_object_or_404(clientes, id_cliente=id, usuario=request.user)
     cliente.delete()
     messages.success(request, 'Cliente deletado com sucesso!')
     return redirect('/clientes')
 
-
-# FUNÇÕES DA PAGINA CAIXA
-
+# =================== CAIXA ===================
+@login_required
 def caixa(request):
-    todos_clientes = clientes.objects.all()
-    
-    lista = {
-        'dados_cliente': todos_clientes
-    }
-    
-    return render(request, 'visual/caixa.html', lista)
-    
+    todos_clientes = clientes.objects.filter(usuario=request.user)
+    return render(request, 'visual/caixa.html', {'dados_cliente': todos_clientes})
 
+@login_required
 def caixa_cliente(request, id):
-    estoque = produtos.objects.all()
-
-    cliente = get_object_or_404(clientes,id_cliente=id)
-
-    # Itens da cesta (temporária)
-    cesta = Cesta.objects.filter(cliente=cliente)
-
+    cliente = get_object_or_404(clientes, id_cliente=id, usuario=request.user)
+    estoque = produtos.objects.filter(usuario=request.user)
+    cesta = Cesta.objects.filter(cliente=cliente, usuario=request.user)
     total_cesta = cesta.aggregate(total=Sum('subtotal'))['total'] or 0
 
-    contexto = {
+    return render(request, 'visual/caixa_cliente.html', {
         'estoque': estoque,
         'cesta': cesta,
         'total_cesta': total_cesta,
         'cliente_id': id,
         'cliente': cliente
-    }
+    })
 
-    return render(request, 'visual/caixa_cliente.html', contexto)
-
+@login_required
 def adicionar_item(request, cliente_id, produto_id):
     if request.method == 'POST':
-        cliente = get_object_or_404(clientes, id_cliente=cliente_id)
-        produto = get_object_or_404(produtos, id=produto_id)
-        
+        cliente = get_object_or_404(clientes, id_cliente=cliente_id, usuario=request.user)
+        produto = get_object_or_404(produtos, id=produto_id, usuario=request.user)
         try:
             quant = int(request.POST.get('quantidade', 1))
             if quant <= 0:
                 return redirect('caixa_cliente', id=cliente_id)
-            
+
             preco_unit = produto.preco
             subtotal = quant * preco_unit
-            
-            # Verifica se o item já está na cesta
+
             item, criado = Cesta.objects.get_or_create(
                 cliente=cliente,
                 produto=produto,
+                usuario=request.user,
                 defaults={
                     'quantidade': quant,
                     'preco_unit': produto.preco,
@@ -222,7 +217,6 @@ def adicionar_item(request, cliente_id, produto_id):
             )
 
             if not criado:
-                # Atualiza quantidade e subtotal
                 item.quantidade += quant
                 item.subtotal = item.quantidade * item.preco_unit
                 item.save()
@@ -232,17 +226,17 @@ def adicionar_item(request, cliente_id, produto_id):
 
     return redirect('caixa_cliente', id=cliente_id)
 
+@login_required
 def remover_item(request, item_id):
     if request.method == 'POST':
         try:
-            item = get_object_or_404(Cesta, id=item_id)
+            item = get_object_or_404(Cesta, id=item_id, usuario=request.user)
             cliente_id = item.cliente.id_cliente
-
             quant = int(request.POST.get('quantidade', 1))
+
             if quant <= 0:
                 return redirect('caixa_cliente', id=cliente_id)
 
-            # Remove parcialmente ou completamente
             if quant >= item.quantidade:
                 item.delete()
             else:
@@ -252,21 +246,21 @@ def remover_item(request, item_id):
 
         except Exception as e:
             print("Erro ao remover item:", e)
-            return redirect('caixa_cliente', id=item.cliente.id_cliente)
 
         return redirect('caixa_cliente', id=cliente_id)
 
+@login_required
 def fechar_conta(request):
     if request.method == 'POST':
         try:
             cliente_id = request.POST.get('cliente_id')
             forma_pag = int(request.POST.get('forma_pag'))
-            valor_pag = Decimal(request.POST.get('valor_pag').replace(',','.'))
+            valor_pag = Decimal(request.POST.get('valor_pag').replace(',', '.'))
             desconto = Decimal(request.POST.get('desconto', '0'))
             desconto_decimal = (Decimal('100') - desconto) / Decimal('100')
 
-            cliente = get_object_or_404(clientes, id_cliente=cliente_id)
-            itens = Cesta.objects.filter(cliente=cliente)
+            cliente = get_object_or_404(clientes, id_cliente=cliente_id, usuario=request.user)
+            itens = Cesta.objects.filter(cliente=cliente, usuario=request.user)
 
             if not itens.exists():
                 return redirect('caixa_cliente', id=cliente_id)
@@ -280,15 +274,14 @@ def fechar_conta(request):
 
             troco = valor_pag - total_com_desconto
 
-            # Criar registro de venda
             venda = vendas.objects.create(
                 id_cliente=cliente,
                 valor_total=total_com_desconto,
-                desconto=desconto,  # ou use algum campo/formulário
-                data_hora=timezone.now()
+                desconto=desconto,
+                data_hora=timezone.now(),
+                usuario=request.user
             )
 
-            # Criar itens da venda
             for item in itens:
                 itens_venda.objects.create(
                     id_vendas=venda,
@@ -297,8 +290,6 @@ def fechar_conta(request):
                     preco_unit=item.preco_unit,
                     subtotal=item.quantidade * item.preco_unit
                 )
-
-                # Atualizar o estoque
                 produto = item.produto
                 produto.quantidade -= item.quantidade
                 produto.save()
@@ -310,12 +301,10 @@ def fechar_conta(request):
                 troco=troco
             )
 
-
-            # Limpar a cesta
             itens.delete()
             messages.success(request, 'Conta fechada com sucesso!')
             return redirect('caixa_cliente', id=cliente_id)
-        
+
         except Exception as e:
             print("Erro ao fechar conta:", e)
             messages.error(request, 'Erro ao finalizar conta.')
