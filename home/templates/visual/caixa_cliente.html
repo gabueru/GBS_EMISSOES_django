@@ -182,7 +182,7 @@
             const linhas = tabela.getElementsByTagName('tr');
 
             Array.from(linhas).forEach((linha) => {
-                const nomeProduto = linha.cells[2]?.textContent.toLowerCase() || '';
+                const nomeProduto = linha.cells[1]?.textContent.toLowerCase() || '';
                 if (nomeProduto.includes(filtro)) {
                     linha.style.display = '';
                 } else {
