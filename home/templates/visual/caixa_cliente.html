@@ -29,7 +29,6 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Tipo</th>
                                 <th>Nome</th>
                                 <th>Preço</th>
@@ -40,7 +39,6 @@
                         <tbody>
                             {% for produtos in estoque %}
                             <tr>
-                                <td>{{ produtos.id }}</td>
                                 <td>{{ produtos.tipo }}</td>
                                 <td>{{ produtos.nome }}</td>
                                 <td>{{ produtos.preco }}</td>
@@ -155,6 +153,11 @@
                                 </div>
 
                                 <div class="modal-footer">
+                                    <hr>
+                                    <div class="d-flex justify-content-between px-3">
+                                        <strong>Total com Desconto:</strong>
+                                        <span id="total-com-desconto">R$ {{ total_cesta }}</span>
+                                    </div>
                                     <button type="button" class="btn btn-secondary"
                                         data-bs-dismiss="modal">Cancelar</button>
                                     <button type="submit" class="btn btn-success" form="form-fechamento">Fechar
@@ -191,6 +194,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const totalOriginal = parseFloat("{{ total_cesta|floatformat:'2' }}".replace(',', '.')) || 0;
+        const totalDescontoLabel = document.getElementById('total-com-desconto');
         const descontoInput = document.getElementById('desconto');
         const valorPagInput = document.getElementById('valor_pag');
 
@@ -203,7 +207,11 @@
             const totalComDesconto = totalOriginal - descontoValor;
 
             valorPagInput.placeholder = 'valor esperado: R$ ' + totalComDesconto.toFixed(2);
+            if (totalDescontoLabel) {
+                totalDescontoLabel.textContent = 'R$ ' + totalComDesconto.toFixed(2);
+            }
         }
+
 
         descontoInput.addEventListener('input', atualizarPlaceholder);
         atualizarPlaceholder();

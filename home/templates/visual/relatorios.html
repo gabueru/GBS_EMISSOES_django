@@ -4,6 +4,7 @@
 
 <div class="container mt-10">
   <h2>Vendas realizadas</h2>
+
   <form method="GET" class="row g-3 mb-4">
     <div class="col-md-3">
       <label for="data_inicio" class="form-label">Data início</label>
@@ -22,6 +23,7 @@
       <button type="submit" class="btn btn-primary w-100">Filtrar</button>
     </div>
   </form>
+
 
   <div class="row">
     <div class="col-lg">
@@ -59,5 +61,15 @@
       </div>
     </div>
   </div>
+  <form method="get" action="{% url 'gerar_relatorio_pdf' %}" target="_blank" class="mt-4">
+    <!-- Mantém os filtros atuais -->
+    <input type="hidden" name="data_inicio" value="{{ request.GET.data_inicio }}">
+    <input type="hidden" name="data_fim" value="{{ request.GET.data_fim }}">
+    <input type="hidden" name="cliente" value="{{ request.GET.cliente }}">
+
+    <button type="submit" class="btn btn-primary">
+      Gerar Relatório em PDF
+    </button>
+  </form>
 </div>
 {% endblock %}

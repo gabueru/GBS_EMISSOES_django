@@ -79,6 +79,37 @@ def relatorios(request):
     })
 
 @login_required
+def gerar_relatorio_pdf(request):
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    cliente_nome = request.GET.get('cliente')
+
+    vendas_filtradas = vendas.objects.select_related('id_cliente').all()
+
+    if data_inicio:
+        vendas_filtradas = vendas_filtradas.filter(data_hora__date__gte=parse_date(data_inicio))
+    if data_fim:
+        vendas_filtradas = vendas_filtradas.filter(data_hora__date__lte=parse_date(data_fim))
+    if cliente_nome:
+        vendas_filtradas = vendas_filtradas.filter(id_cliente__nome_cliente__icontains=cliente_nome)
+
+    # Calcula o total
+    total_geral = vendas_filtradas.aggregate(total=Sum('valor_total'))['total'] or 0
+
+    html_string = render_to_string('visual/relatorio_pdf.html', {
+        'vendas': vendas_filtradas,
+        'total_geral': total_geral,
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename=relatorio_vendas.pdf'
+    weasyprint.HTML(string=html_string).write_pdf(response)
+
+    return response
+
+@login_required
 def gerar_recibo(request, venda_id):
     venda = get_object_or_404(vendas, id=venda_id, usuario=request.user)
     itens = itens_venda.objects.filter(id_vendas=venda)
@@ -288,7 +319,8 @@ def fechar_conta(request):
                     prod_id=item.produto,
                     quantidade=item.quantidade,
                     preco_unit=item.preco_unit,
-                    subtotal=item.quantidade * item.preco_unit
+                    subtotal=item.quantidade * item.preco_unit,
+                    usuario=request.user
                 )
                 produto = item.produto
                 produto.quantidade -= item.quantidade
@@ -298,12 +330,13 @@ def fechar_conta(request):
                 id_vendas=venda,
                 forma_pag=forma_pag,
                 valor_pag=valor_pag,
-                troco=troco
+                troco=troco,
+                usuario=request.user
             )
 
             itens.delete()
-            messages.success(request, 'Conta fechada com sucesso!')
-            return redirect('caixa_cliente', id=cliente_id)
+            messages.success(request, f'Conta fechada com sucesso! Troco: R$ {troco:.2f}')
+            return redirect('caixa')
 
         except Exception as e:
             print("Erro ao fechar conta:", e)

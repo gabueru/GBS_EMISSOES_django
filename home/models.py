@@ -18,13 +18,12 @@ class clientes(models.Model):
     id_cliente = models.AutoField(primary_key=True, verbose_name='ID do cliente')
     nome_cliente = models.CharField(max_length=100, verbose_name='Nome do cliente')
     contato = models.CharField(max_length=11, blank=True, null=True, verbose_name='telefone celular')
-    tempo_estadia = models.IntegerField(verbose_name='Tempo de estadia')
     created_cad = models.DateTimeField(auto_now_add=True, null=True)
     update_cad = models.DateTimeField(auto_now=True)
 
 class Cesta(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    cliente = models.ForeignKey(clientes, on_delete=models.CASCADE)
+    cliente = models.ForeignKey(clientes, on_delete=models.CASCADE, related_name='cesta_set')
     produto = models.ForeignKey(produtos, on_delete=models.DO_NOTHING)
     quantidade = models.IntegerField()
     preco_unit = models.DecimalField(max_digits=10, decimal_places=2)

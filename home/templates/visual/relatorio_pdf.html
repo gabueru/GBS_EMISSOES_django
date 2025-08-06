@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Vendas</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 30px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        p {
+            text-align: center;
+            margin: 0;
+            color: #666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #343a40;
+            color: white;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tfoot td {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Relatório de Vendas</h2>
+    <p>Período: {{ data_inicio|default:"---" }} até {{ data_fim|default:"---" }}</p>
+    <p>Cliente: {{ cliente|default:"Todos" }}</p>
+
+    {% if vendas %}
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Valor Total (R$)</th>
+                <th>Desconto (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venda in vendas %}
+            <tr>
+                <td>{{ venda.data_hora|date:"d/m/Y H:i" }}</td>
+                <td>{{ venda.id_cliente.nome_cliente }}</td>
+                <td>{{ venda.valor_total|floatformat:2 }}</td>
+                <td>{{ venda.desconto }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" style="text-align: right; font-weight: bold;">TOTAL GERAL:</td>
+                <td colspan="2" style="font-weight: bold;">R$ {{ total_geral|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <p class="no-data">Nenhuma venda encontrada no período selecionado.</p>
+    {% endif %}
+</body>
+
+</html>

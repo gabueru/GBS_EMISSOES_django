@@ -23,19 +23,13 @@
     <h1>Clientes Cadastrados</h1>
     <table class="table table-bordered table-hover">
         <tr>
-            <th>ID</th>
             <th>Nome do cliente</th>
             <th>Contato</th>
-            <th>Tempo de estadia</th>
-            <th>Data de entrada</th>
         </tr>
         {% for clientes in dados_cliente %}
         <tr>
-            <td>{{ clientes.id_cliente }}</td>
             <td>{{ clientes.nome_cliente }}</td>
             <td>{{ clientes.contato }}</td>
-            <td>{{ clientes.tempo_estadia }}</td>
-            <td>{{ clientes.created_cad }}</td>
             <td>
                 <a href="/clientes/edit/{{clientes.id_cliente}}"><button type="button" class="btn btn-primary">
                         Editar

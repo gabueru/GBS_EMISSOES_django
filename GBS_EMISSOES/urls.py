@@ -41,6 +41,8 @@ urlpatterns = [
     path('relatorios/', views.relatorios, name='relatorios'),
     # html do recibo
     path('recibo/<int:venda_id>/', views.gerar_recibo, name='gerar_recibo'),
+    # html do relatorio
+    path('relatorios/pdf/', views.gerar_relatorio_pdf, name='gerar_relatorio_pdf'),
 
 
 
