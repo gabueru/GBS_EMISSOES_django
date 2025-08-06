@@ -43,7 +43,13 @@
                                 <td>{{ produtos.nome }}</td>
                                 <td>{{ produtos.preco }}</td>
                                 <td>{{ produtos.medida }}</td>
-                                <td>{{ produtos.quantidade }}</td>
+                                <td>
+                                    {% if produtos.quantidade > 0 %}
+                                    {{ produtos.quantidade }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <form method="POST" action="{% url 'adicionar_item' cliente_id produtos.id %}"
                                         class="d-flex align-items-center">

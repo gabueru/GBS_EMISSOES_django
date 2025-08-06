@@ -139,6 +139,11 @@ def add_produto(request):
         if form.is_valid():
             novo_prod = form.save(commit=False)
             novo_prod.usuario = request.user
+
+            tipo = request.POST.get('tipo')
+            if tipo in ['2', '3']:
+                novo_prod.quantidade = 0
+
             novo_prod.save()
             return redirect('/estoque')
     else:
@@ -323,8 +328,9 @@ def fechar_conta(request):
                     usuario=request.user
                 )
                 produto = item.produto
-                produto.quantidade -= item.quantidade
-                produto.save()
+                if produto.tipo == 1:
+                    produto.quantidade -= item.quantidade
+                    produto.save()
 
             pagamentos.objects.create(
                 id_vendas=venda,
