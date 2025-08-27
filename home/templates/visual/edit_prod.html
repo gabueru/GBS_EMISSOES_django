@@ -2,7 +2,7 @@
 {% block conteudo %}
 
 <div class="offset-1 col-10 list-div">
-    <h1>Editando - {{prod_edit.nome}}</h1>
+    <h1 id="titulo">Editando - {{prod_edit.nome}}</h1>
     <form method="POST" id="Prod_Form">
         {% csrf_token %}
         <div class="input-group mb-3">
@@ -25,7 +25,8 @@
             <span class="input-group-text">Preço</span>
             <span class="input-group-text">R$</span>
             <input type="number" name="preco" id="precoProduto" step="0.01" min="0.01" class="form-control"
-                aria-label="Real amount (with dot and two decimal places)" value="{{ produto.preco|default_if_none:'' }}">
+                aria-label="Real amount (with dot and two decimal places)"
+                value="{{ produto.preco|default_if_none:'' }}">
         </div>
 
 

@@ -11,6 +11,9 @@
     integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/general-sans.css' %}">
+  <link rel="stylesheet" href="{% static 'css/ranade.css' %}">
+  <link rel="stylesheet" href="{% static 'css/supreme.css' %}">
 </head>
 
 <body>
@@ -26,13 +29,13 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-          <a class="nav-link active fs-4" aria-current="page" href="{% url 'caixa' %}">CAIXA</a>
-          <a class="nav-link active fs-4" href="{% url 'estoque' %}">ESTOQUE</a>
-          <a class="nav-link active fs-4" href="{% url 'clientes' %}">CLIENTES</a>
-          <a class="nav-link active fs-4" href="{% url 'relatorios' %}">RELATORIOS</a>
+          <a class="nav-link active fs-4" aria-current="page" href="{% url 'caixa' %}" id="btn-navbar">CAIXA</a>
+          <a class="nav-link active fs-4" href="{% url 'estoque' %}" id="btn-navbar">ESTOQUE</a>
+          <a class="nav-link active fs-4" href="{% url 'clientes' %}" id="btn-navbar">CLIENTES</a>
+          <a class="nav-link active fs-4" href="{% url 'relatorios' %}" id="btn-navbar">RELATORIOS</a>
         </div>
         <div class="navbar-nav ms-auto">
-          <a class="nav-link active fs-4 text-danger" href="{% url 'logout' %}">SAIR</a>
+          <a class="nav-link active fs-4 text-danger" href="{% url 'logout' %}" id="btn-navbar">SAIR</a>
         </div>
       </div>
     </div>

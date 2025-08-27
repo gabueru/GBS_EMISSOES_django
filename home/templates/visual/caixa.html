@@ -13,8 +13,7 @@
 {% endif %}
 
 <div class="container mt-4">
-    <h1 class="mb-4">Contas dos clientes</h1>
-    <p>Selecione uma mesa/cliente para abrir a conta:</p>
+    <h1 class="mb-4" id="titulo">Contas dos clientes</h1>
 
     <div class="row">
         {% for cliente in dados_cliente %}
@@ -22,7 +21,7 @@
         <div class="col-md-3 mb-4">
             <div class="card text-white {% if total_itens > 0 %}bg-primary{% else %}bg-danger{% endif %} shadow"
                 style="cursor: pointer;" onclick="window.location.href='/caixa/{{ cliente.id_cliente }}';">
-                <div class="card-body">
+                <div class="card-body" id="card-cliente">
                     <h5 class="card-title">{{ cliente.nome_cliente }}</h5>
                     <p class="card-text">Contato: {{ cliente.contato }}</p>
                     {% if total_itens > 0 %}

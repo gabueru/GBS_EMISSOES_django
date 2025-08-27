@@ -2,7 +2,7 @@
 {% block conteudo %}
 
 
-<h2 class="mb-4">Produtos consumidos pelo cliente - {{ cliente.nome_cliente }}</h2>
+
 
 {% if messages %}
 <div class="container mt-2">
@@ -16,6 +16,7 @@
 {% endif %}
 
 <div class="container-lg">
+    <h2 class="mb-4" id="titulo">Produtos consumidos - {{ cliente.nome_cliente }}</h2>
     <div class="row">
         <!-- coluna 1 -->
         <div class="col-lg-6 mb-4">

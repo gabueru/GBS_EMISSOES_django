@@ -1,4 +1,119 @@
 {% extends 'visual/base.html' %}
 {% block conteudo %}
-<H1>TELA INICIAL DO SISTEMA DE CONTROLE DE CAIXA</H1>
+
+<div class="container mt-4" id="container-home">
+
+    <div class="row">
+        <!-- Gráfico de Vendas Diárias -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Vendas Diárias</h5>
+                    <canvas id="graficoVendas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Produtos Mais Vendidos -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body" id="grafico">
+                    <h5 class="card-title text-center">Produtos Mais Vendidos</h5>
+                    <canvas id="graficoMaisVendidos"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Estoque Baixo -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Produtos com Estoque Baixo</h5>
+                    <table class="table table-bordered table-hover text-center" id="tabela">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto, qtd in produtos_estoque_baixo %}
+                            <tr class="{% if qtd < 5 %}table-danger{% endif %}">
+                                <td>{{ produto }}</td>
+                                <td>{{ qtd }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Importa Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Dados vindos da view
+    const labelsVendas = {{ labels_vendas| safe }};
+    const dataVendas = {{ data_vendas| safe }};
+    const labelsEstoque = {{ labels_estoque| safe }};
+    const dataEstoque = {{ data_estoque| safe }};
+    const labelsMaisVendidos = {{ labels_mais_vendidos| safe }};
+    const dataMaisVendidos = {{ data_mais_vendidos| safe }};
+
+    // Gráfico de Vendas Diárias
+    const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
+    new Chart(ctxVendas, {
+        type: 'bar',
+        data: {
+            labels: labelsVendas,
+            datasets: [{
+                label: 'Total R$',
+                data: dataVendas,
+                backgroundColor: '#01ebee'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => 'R$ ' + ctx.formattedValue } }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Valor (R$)' } },
+                x: { title: { display: true, text: 'Data' } }
+            }
+        }
+    });
+
+    // Gráfico de Produtos Mais Vendidos
+    const ctxMaisVendidos = document.getElementById('graficoMaisVendidos').getContext('2d');
+    new Chart(ctxMaisVendidos, {
+        type: 'bar',
+        data: {
+            labels: labelsMaisVendidos,
+            datasets: [{
+                label: 'Qtd Vendida',
+                data: dataMaisVendidos,
+                backgroundColor: '#01ebee'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Quantidade Vendida' } },
+                x: { title: { display: true, text: 'Produto' } }
+            }
+        }
+    });
+</script>
+
 {% endblock %}

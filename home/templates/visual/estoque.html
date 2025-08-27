@@ -2,12 +2,7 @@
 
 {% block conteudo %}
 
-<!-- Button add product -->
-<a id="add-link" href="/estoque/add">
-    <button type="button" class="btn btn-primary">
-        Cadastrar novo produto
-    </button>
-</a>
+
 {% if messages %}
 <ul class="messages">
     {% for message in messages %}
@@ -18,67 +13,151 @@
 
 
 <!-- Exibir todos os produtos ja cadastrados -->
-<div class="container">
-    <h1>Produtos Cadastrados</h1>
-    <table class="table table-bordered table-hover">
-        <tr>
-            <th>tipo</th>
-            <th>nome</th>
-            <th>preço unitario</th>
-            <th>unidade de medida</th>
-            <th>quantidade</th>
-        </tr>
-        {% for produtos in estoque %}
-        <tr>
-            <td>{{produtos.tipo}}</td>
-            <td>{{produtos.nome}}</td>
-            <td>{{produtos.preco}}</td>
-            <td>{{produtos.medida}}</td>
-            <td>{{produtos.quantidade}}</td>
-            <td>
-                <a href="edit/{{produtos.id}}"><button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                        data-bs-target="#staticBackdrop{{produtos.id}}">
-                        Editar
-                    </button></a>
-            </td>
-            <td>
+<div class="container" id="container-estoque">
+    <h1 id="titulo">Produtos Cadastrados</h1>
 
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                    Deletar
-                </button>
+    <!-- botao adicionar produto -->
+    <a id="add-link" href="/estoque/add">
+        <button type="button" class="btn btn-primary" id="btn-padrao">
+            Cadastrar novo produto
+        </button>
+    </a>
+    <form method="GET" class="row g-3 mb-4" id="forms">
+        <div class="col-md-4">
+            <label class="form-label" for="tipo">Tipo de Produto</label>
+            <select class="form-select" name="tipo" id="tipo">
+                <option value="">Escolha...</option>
+                <option value="1">Mercadoria</option>
+                <option value="2">Serviço</option>
+                <option value="3">Comida</option>
+            </select>
+        </div>
 
-                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                TEM CERTEZA QUE DESEJA EXCLUIR ESTE ITEM?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary"
-                                    data-bs-dismiss="modal">Cancelar</button>
-                                <form method="post" action="{% url 'delete_produto' produtos.id %}">
-                                    {% csrf_token %}
-                                    <button onclick="confirmacao()" type="submit"
-                                        class="btn btn-danger">Deletar</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+        <div class="col-md-4">
+            <label for="nome" class="form-label">Nome do produto</label>
+            <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome do produto"
+                value="{{ request.GET.nome }}">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            {% if request.GET.tipo or request.GET.nome %}
+            <a class="btn btn-primary" href="{% url 'estoque' %}" id="btn-form">Resetar</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary w-100" id="btn-form">Filtrar</button>
+        </div>
+    </form>
+    <div class="row">
+        <div class="col-lg">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <table class="table table-striped table-hover" id="tabela">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Nome</th>
+                            <th>Preço unitario</th>
+                            <th>Unidade de medida</th>
+                            <th>Quantidade</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                        {% for produtos in page_obj %}
+                        <tr>
+                            <td>{{produtos.tipo}}</td>
+                            <td>{{produtos.nome}}</td>
+                            <td>{{produtos.preco}}</td>
+                            <td>{{produtos.medida}}</td>
+                            <td>{{produtos.quantidade}}</td>
+                            <td>
+                                <a href="edit/{{produtos.id}}"><button type="button" class="btn btn-primary"
+                                        data-bs-toggle="modal" data-bs-target="#staticBackdrop{{produtos.id}}">
+                                        Editar
+                                    </button></a>
+                            </td>
+                            <td>
+
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#exampleModal">
+                                    Deletar
+                                </button>
+
+                                <div class="modal fade" id="exampleModal" tabindex="-1"
+                                    aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel">Confirmação</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                TEM CERTEZA QUE DESEJA EXCLUIR ESTE ITEM?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancelar</button>
+                                                <form method="post" action="{% url 'delete_produto' produtos.id %}">
+                                                    {% csrf_token %}
+                                                    <button onclick="confirmacao()" type="submit"
+                                                        class="btn btn-danger">Deletar</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+
+                            <li class="page-item">
+                                {% if page_obj.has_previous %}
+                                {% if request.GET.tipo or request.GET.nome %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+                                    aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                                {% else %}
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}"><span
+                                        aria-hidden="true">&laquo;</span>
+                                </a>
+
+                                {% endif %}
+                                {% endif %}
+                            </li>
+
+
+                            {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">
+                                    {{ num }}</a>
+                            </li>
+                            {% endfor %}
+
+
+                            <li class="page-item">
+                                {% if page_obj.has_next %}
+                                {% if request.GET.tipo or request.GET.nome %}
+
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}"
+                                    aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                                {% else %}
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                                {% endif %}
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
-
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-
+            </div>
+        </div>
+    </div>
 </div>
-
-
-
 {% endblock %}

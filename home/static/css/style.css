@@ -12,3 +12,77 @@ ul.messages li {
 #add-link {
     text-decoration: none;
 }
+
+/* teste */
+
+body {
+    background-color: #cadcdc;
+}
+
+#titulo {
+    font-family: 'GeneralSans-Medium';
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 0px;
+}
+
+#btn-navbar {
+    font-family: 'GeneralSans-Medium';
+    padding-right: 30px;
+    padding-left: 30px;
+    color: #01eaeedb;
+    border-style: groove;
+    border-color: #cadcdc;
+    border-width: 2px;
+    border-top-style: none;
+    border-bottom-style: none;
+    border-left-style: none;
+}
+
+#btn-padrao {
+    margin-bottom: 15px;
+}
+
+#btn-form {
+    margin-right: 10px;
+}
+
+#tabela {
+    font-family: 'Supreme-medium';
+    border-bottom: 10px;
+
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background-color: coral;
+}
+
+#card-cliente {
+    font-family: 'GeneralSans-Medium';
+}
+
+#container-estoque {
+    background-color: #869a9a;
+    border-radius: 10px;
+    padding-bottom: 10px;
+    margin-top: 20px;
+}
+
+#container-home {
+    font-family: 'GeneralSans-Medium';
+}
+
+#grafico {
+    font-family: 'Supreme-medium';
+}
+
+#forms {
+    font-family: 'GeneralSans-Medium';
+}

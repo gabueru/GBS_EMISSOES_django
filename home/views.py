@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import F, Sum, DecimalField, ExpressionWrapper
 from django.utils import timezone
+from django.utils.timezone import now
 from decimal import Decimal
 from .models import produtos, clientes, Cesta, vendas, itens_venda, pagamentos
 from .forms import Prod_Form, Cliente_Form
@@ -13,6 +14,9 @@ from django.utils.dateparse import parse_date
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+import json
+from django.core.paginator import Paginator
+
 
 # =================== AUTENTICAÇÃO ===================
 def cadastro_view(request):
@@ -54,7 +58,50 @@ def logout_view(request):
 
 @login_required
 def home(request):
-    return render(request, 'visual/home.html')
+    vendas_diarias = (
+        itens_venda.objects.filter(usuario=request.user)
+        .values("id_vendas__data_hora__date")
+        .annotate(total=Sum("subtotal"))
+        .order_by("id_vendas__data_hora__date")
+    )
+
+    labels_vendas = [str(v["id_vendas__data_hora__date"]) for v in vendas_diarias]
+    data_vendas = [float(v["total"]) for v in vendas_diarias]
+
+    estoque_baixo = (
+        produtos.objects.filter(usuario=request.user, tipo=1, quantidade__lte=5)
+        .order_by("quantidade")
+    )
+
+    labels_estoque = [p.nome for p in estoque_baixo]
+    data_estoque = [p.quantidade for p in estoque_baixo]
+
+    mais_vendidos = (
+        itens_venda.objects.filter(usuario=request.user)
+        .values("prod_id__nome")
+        .annotate(total_vendido=Sum("quantidade"))
+        .order_by("-total_vendido")[:5]  # top 5
+    )
+
+    labels_mais_vendidos = [item["prod_id__nome"] for item in mais_vendidos]
+    data_mais_vendidos = [int(item["total_vendido"]) for item in mais_vendidos]
+
+    produtos_estoque_baixo = (
+        produtos.objects.filter(tipo=1)  # só mercadorias
+        .order_by('quantidade')[:8]      # 8 com menor estoque
+        .values_list('nome', 'quantidade')
+    )
+
+    context = {
+        "produtos_estoque_baixo": produtos_estoque_baixo,
+        "labels_vendas": labels_vendas,
+        "data_vendas": data_vendas,
+        "labels_estoque": labels_estoque,
+        "data_estoque": data_estoque,
+        "labels_mais_vendidos": json.dumps(labels_mais_vendidos),
+        "data_mais_vendidos": json.dumps(data_mais_vendidos),
+    }
+    return render(request, "visual/home.html", context)
 
 # =================== RELATÓRIOS ===================
 @login_required
@@ -74,9 +121,24 @@ def relatorios(request):
 
     vendas_filtradas = vendas_filtradas.order_by('-data_hora')
 
-    return render(request, 'visual/relatorios.html', {
-        'vendas': vendas_filtradas
-    })
+    paginator = Paginator(vendas_filtradas, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    page_range= range(page_obj.paginator.num_pages)
+
+    querydict = request.GET.copy()
+    if "page" in querydict:
+        querydict.pop("page")
+
+    contexto = {
+        'vendas': vendas_filtradas,
+        'page_range': page_range,
+        'page_obj': page_obj,
+        "querystring": querydict.urlencode()
+    }
+
+    return render(request, 'visual/relatorios.html', contexto)
 
 @login_required
 def gerar_relatorio_pdf(request):
@@ -129,8 +191,36 @@ def gerar_recibo(request, venda_id):
 # =================== ESTOQUE ===================
 @login_required
 def estoque(request):
-    todos_produtos = produtos.objects.filter(usuario=request.user)
-    return render(request, 'visual/estoque.html', {'estoque': todos_produtos})
+    prod_filtrados = produtos.objects.filter(usuario=request.user)
+    tipo = request.GET.get('tipo')
+    nome = request.GET.get('nome')
+
+    if tipo:
+        prod_filtrados = prod_filtrados.filter(tipo=tipo)
+    if nome:
+        prod_filtrados = prod_filtrados.filter(nome__icontains=nome)
+
+    prod_filtrados = prod_filtrados.order_by('nome')
+
+
+    paginator = Paginator(prod_filtrados, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    page_range = range(1, page_obj.paginator.num_pages + 1)
+
+    querydict = request.GET.copy()
+    if "page" in querydict:
+        querydict.pop("page")
+
+    contexto = {
+        'page_range': page_range,
+        'page_obj': page_obj,
+        'prod_filtrados': prod_filtrados,
+        "querystring": querydict.urlencode(),
+    }
+
+    return render(request, 'visual/estoque.html', contexto)
 
 @login_required
 def add_produto(request):
@@ -237,7 +327,11 @@ def adicionar_item(request, cliente_id, produto_id):
             quant = int(request.POST.get('quantidade', 1))
             if quant <= 0:
                 return redirect('caixa_cliente', id=cliente_id)
-
+            
+            if produto.tipo == 1 and produto.quantidade < quant:
+                messages.error(request, 'Estoque insuficiente.')
+                return redirect('caixa_cliente', id=cliente_id)
+            
             preco_unit = produto.preco
             subtotal = quant * preco_unit
 
@@ -251,7 +345,7 @@ def adicionar_item(request, cliente_id, produto_id):
                     'subtotal': subtotal
                 }
             )
-
+            
             if not criado:
                 item.quantidade += quant
                 item.subtotal = item.quantidade * item.preco_unit
