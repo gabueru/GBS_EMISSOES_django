@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-_o)&7h6@erwe@vq2si2hg0s01uupw=93yg=^7wf0h)$i+zg0ac
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["gbsemissoespdv.com.br"]
 
 # LOGIN URL
 LOGIN_URL = 'login'
@@ -107,7 +107,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Para produção
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')  # Para produção
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Para desenvolvimento
 ]
